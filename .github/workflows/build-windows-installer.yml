@@ -1,0 +1,32 @@
+name: Build Windows 64-bit Installer
+
+on:
+  release:
+    types: [published] # Il flusso si attiva quando pubblichi una Release su GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest # Obbligatorio usare Windows per generare installer Windows nativi
+
+    steps:
+    - name: Controlla il codice sorgente
+      uses: actions/checkout@v4
+
+    - name: Configura Java (JDK 21 x64)
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        architecture: x64
+        cache: 'maven'
+
+    - name: Costruisci il progetto e l'installer con Maven
+      run: mvn clean verify
+
+    - name: Carica l'installer generato nella Release di GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        files: target/dist/*.exe # jpackage inserisce l'output nella sottocartella dist di target
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

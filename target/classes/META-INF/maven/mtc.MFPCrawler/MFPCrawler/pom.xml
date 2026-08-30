@@ -16,106 +16,33 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.googlecode.maven-download-plugin</groupId>
-				<artifactId>download-maven-plugin</artifactId>
-				<version>1.8.1</version>
+				<groupId>com.github.akman</groupId>
+				<artifactId>jpackage-maven-plugin</artifactId>
+				<version>0.1.5</version>
 				<executions>
 					<execution>
-						<id>download-win-jre</id>
-						<phase>prepare-package</phase>
+						<phase>verify</phase>
 						<goals>
-							<goal>wget</goal>
+							<goal>jpackage</goal>
 						</goals>
-						<configuration>
-							<url>
-								https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.10%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.10_7.zip</url>
-							<unpack>true</unpack>
-							<overwrite>true</overwrite> <!-- Forza la
-							sovrascrittura ed evita AccessDeniedException -->
-							<outputDirectory>${project.build.directory}/jre-win</outputDirectory>
-							<cacheDirectory>${project.basedir}/.maven-cache</cacheDirectory>
-						</configuration>
 					</execution>
 				</executions>
-			</plugin>	<!--
-			1. Crea il Fat JAR con tutte le dipendenze integrato -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.6.0</version>
 				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<!-- SOSTITUISCI con la tua classe Main (es.
-							com.mio.package.Main) -->
-							<mainClass>mtc.MFPCrawler.MFPCrawler</mainClass>
-						</manifest>
-					</archive>
+					<!-- Tipo di installer: può essere EXE o MSI -->
+					<type>EXE</type>
+					<name>${project.artifactId}</name>
+					<appversion>${project.version}</appversion>
+					<!-- Classe principale del tuo programma Java -->
+					<mainclass>com.esempio.Main</mainclass>
+					<mainjar>${project.build.finalName}.jar</mainjar>
+					<input>${project.build.directory}</input>
+					<!-- Opzioni aggiuntive per Windows (crea scorciatoie) -->
+					<winmenu>true</winmenu>
+					<winsubmenu>IlTuoBrand</winsubmenu>
+					<winshortcut>true</winshortcut>
 				</configuration>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 
-			<!-- 2. Esegue jpackage su Linux per creare il pacchetto nativo .deb
-			(o .rpm) -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.1.0</version>
-				<executions>
-					<execution>
-						<id>jpackage</id>
-						<phase>package</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>
-							<executable>${java.home}/bin/jpackage</executable>
-							<arguments>
-								<!-- Usa 'deb' su Ubuntu/Debian/Mint, oppure
-								'rpm' su Fedora/RHEL/SUSE -->
-								<argument>--type</argument>
-								<argument>deb</argument>
-
-								<argument>--name</argument>
-								<argument>SNMPCrawler</argument>
-
-								<argument>--app-version</argument>
-								<argument>${project.version}</argument>
-
-								<argument>--input</argument>
-								<argument>${project.build.directory}</argument>
-
-								<argument>--main-jar</argument>
-								<argument>
-									${project.build.finalName}-jar-with-dependencies.jar</argument>
-
-								<argument>--dest</argument>
-								<argument>${project.build.directory}/dist</argument>
-
-								<!-- Include la JRE privata ridotta direttamente
-								nel pacchetto -->
-								<argument>--runtime-image</argument>
-								<argument>${java.home}</argument>
-
-								<!-- Crea la voce nel menu delle applicazioni di
-								Linux (.desktop) -->
-								<argument>--linux-shortcut</argument>
-							</arguments>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
