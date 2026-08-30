@@ -12,13 +12,50 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<app.main.class>mtc.MFPCrawler.MFPCrawler</app.main.class>
 	</properties>
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.github.akman</groupId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.4.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>${app.main.class}</mainClass>
+								</transformer>
+							</transformers>
+							<finalName>${project.artifactId}-fat</finalName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.panteleyev</groupId>
 				<artifactId>jpackage-maven-plugin</artifactId>
-				<version>0.1.5</version>
+				<version>1.4.0</version>
+				<configuration>
+					<name>MFPCrawler</name>
+					<appVersion>1.0.0</appVersion>
+					<vendor>Mitch Pisa</vendor>
+					<destination>target/dist</destination>
+					<mainClass>${app.main.class}</mainClass>
+					<mainJar>${project.build.finalName}-fat.jar</mainJar>
+					<input>target</input>
+					<type>EXE</type>
+					<windowsMenu>true</windowsMenu>
+					<windowsMenuGroup>Mitch Pisa</windowsMenuGroup>
+					<windowsShortcut>true</windowsShortcut>
+					<windowsInstallerMenu>true</windowsInstallerMenu>
+				</configuration>
 				<executions>
 					<execution>
 						<phase>verify</phase>
@@ -27,22 +64,7 @@
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<!-- Tipo di installer: può essere EXE o MSI -->
-					<type>EXE</type>
-					<name>${project.artifactId}</name>
-					   <appversion>1.0.0</appversion> 
-					<!-- Classe principale del tuo programma Java -->
-					<mainclass>mtc.MFPCrawler.MFPCrawler</mainclass>
-					<mainjar>${project.build.finalName}.jar</mainjar>
-					<input>${project.build.directory}</input>
-					<!-- Opzioni aggiuntive per Windows (crea scorciatoie) -->
-					<winmenu>true</winmenu>
-					<winsubmenu>Mitch Pisa</winsubmenu>
-					<winshortcut>true</winshortcut>
-				</configuration>
 			</plugin>
-
 		</plugins>
 	</build>
 	<dependencies>
