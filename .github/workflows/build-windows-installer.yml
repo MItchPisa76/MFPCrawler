@@ -2,11 +2,14 @@ name: Build Windows 64-bit Installer
 
 on:
   release:
-    types: [published] # Il flusso si attiva quando pubblichi una Release su GitHub
+    types: [published]
+
+permissions:
+  contents: write  # Required for uploading files to releases
 
 jobs:
   build-windows:
-    runs-on: windows-latest # Obbligatorio usare Windows per generare installer Windows nativi
+    runs-on: windows-latest
 
     steps:
     - name: Controlla il codice sorgente
@@ -26,7 +29,6 @@ jobs:
     - name: Carica l'installer generato nella Release di GitHub
       uses: softprops/action-gh-release@v2
       with:
-        files: target/dist/*.exe # jpackage inserisce l'output nella sottocartella dist di target
+        files: target/dist/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
