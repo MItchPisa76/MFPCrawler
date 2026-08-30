@@ -31,7 +31,7 @@
 					<!-- Tipo di installer: può essere EXE o MSI -->
 					<type>EXE</type>
 					<name>${project.artifactId}</name>
-					<appversion>${project.version}</appversion>
+					   <appversion>1.0.0</appversion> 
 					<!-- Classe principale del tuo programma Java -->
 					<mainclass>mtc.MFPCrawler.MFPCrawler</mainclass>
 					<mainjar>${project.build.finalName}.jar</mainjar>
