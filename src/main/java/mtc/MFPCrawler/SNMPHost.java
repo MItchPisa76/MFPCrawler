@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -477,7 +478,7 @@ public class SNMPHost {
 		MFPCrawler.crawlerWindow.appendLog(string);
 	}
 
-	public synchronized void sendSNMPQuery(String OID) {
+	public synchronized void sendSNMPQuery(String OIDreq) {
 
 		InetAddress address;
 		try {
@@ -487,7 +488,7 @@ public class SNMPHost {
 				return;
 			}
 
-			appendLog("sendSNMPQuery to:" + address + " OID:"+OID);
+			appendLog("sendSNMPQuery to:" + address + " OID:"+OIDreq);
 			TransportMapping<?> transport = new DefaultUdpTransportMapping();
 			Snmp snmp = new Snmp(transport);
 			transport.listen();
@@ -501,7 +502,7 @@ public class SNMPHost {
 
 			PDU pdu = new PDU();
 
-			pdu.add(new VariableBinding(new OID(OID)));
+			pdu.add(new VariableBinding(new OID(OIDreq)));
 			pdu.setType(PDU.GETBULK);
 			pdu.setNonRepeaters(0); // 0 = Tutti gli OID nella lista sono tabellari
 			pdu.setMaxRepetitions(5000);
@@ -511,10 +512,22 @@ public class SNMPHost {
 			if (response == null || response.getResponse() == null) {
 
 			} else {
+				Map<String,String> map = new HashMap<String,String>();
 				for (VariableBinding aa : response.getResponse().getVariableBindings()) {
 					String oo = aa.getOid().toString();
+					map.put(oo, aa.toValueString());
 					System.out.println(oo+">"+aa.toValueString());
 				}
+				HttpClient client = Options.getHttpClient();
+				String url = Options.getResolveServer() + "/snmpquery";
+
+				Builder builder = HttpRequest.newBuilder().uri(URI.create(url))
+						.header("Content-Type", "application/json").header("token", Options.token);
+
+			//	HttpRequest	request = builder.POST(BodyPublishers.ofString(jsonPayload)).build();
+				
+			//	HttpResponse<String> hres = client.send(request, HttpResponse.BodyHandlers.ofString());
+
 			}
 				
 		} catch (UnknownHostException e) {
