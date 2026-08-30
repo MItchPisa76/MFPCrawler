@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>mtc.MFPCrawler</groupId>
+	<artifactId>MFPCrawler</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.googlecode.maven-download-plugin</groupId>
+				<artifactId>download-maven-plugin</artifactId>
+				<version>1.8.1</version>
+				<executions>
+					<execution>
+						<id>download-win-jre</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>wget</goal>
+						</goals>
+						<configuration>
+							<url>
+								https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.10%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.10_7.zip</url>
+							<unpack>true</unpack>
+							<overwrite>true</overwrite> <!-- Forza la
+							sovrascrittura ed evita AccessDeniedException -->
+							<outputDirectory>${project.build.directory}/jre-win</outputDirectory>
+							<cacheDirectory>${project.basedir}/.maven-cache</cacheDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>	<!--
+			1. Crea il Fat JAR con tutte le dipendenze integrato -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<!-- SOSTITUISCI con la tua classe Main (es.
+							com.mio.package.Main) -->
+							<mainClass>mtc.MFPCrawler.MFPCrawler</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 2. Esegue jpackage su Linux per creare il pacchetto nativo .deb
+			(o .rpm) -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>jpackage</id>
+						<phase>package</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${java.home}/bin/jpackage</executable>
+							<arguments>
+								<!-- Usa 'deb' su Ubuntu/Debian/Mint, oppure
+								'rpm' su Fedora/RHEL/SUSE -->
+								<argument>--type</argument>
+								<argument>deb</argument>
+
+								<argument>--name</argument>
+								<argument>SNMPCrawler</argument>
+
+								<argument>--app-version</argument>
+								<argument>${project.version}</argument>
+
+								<argument>--input</argument>
+								<argument>${project.build.directory}</argument>
+
+								<argument>--main-jar</argument>
+								<argument>
+									${project.build.finalName}-jar-with-dependencies.jar</argument>
+
+								<argument>--dest</argument>
+								<argument>${project.build.directory}/dist</argument>
+
+								<!-- Include la JRE privata ridotta direttamente
+								nel pacchetto -->
+								<argument>--runtime-image</argument>
+								<argument>${java.home}</argument>
+
+								<!-- Crea la voce nel menu delle applicazioni di
+								Linux (.desktop) -->
+								<argument>--linux-shortcut</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.snmp4j</groupId>
+			<artifactId>snmp4j</artifactId>
+			<version>3.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.17.2</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>oosnmp-repo</id>
+			<name>OO-SNMP Repository</name>
+			<url>https://oosnmp.net/dist/release/</url>
+		</repository>
+	</repositories>
+	<name>MFPCrawler</name>
+	<description>Find snmp MFP in local network</description>
+</project>
