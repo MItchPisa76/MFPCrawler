@@ -188,8 +188,9 @@ public class Resolver {
 
 	static InetAddress address;
 	static Thread resolverThread;
+
 	private static class ResolverWorker extends CrawlerWorkerBase {
-		//public Hashtable<SNMPHost, Date> lastUpdatesMantain = new Hashtable();
+		// public Hashtable<SNMPHost, Date> lastUpdatesMantain = new Hashtable();
 		// public Vector<SNMPHost> toUpdateMantain = new Vector<>();
 
 		@Override
@@ -203,7 +204,7 @@ public class Resolver {
 						resolverThread = Thread.currentThread();
 						Thread.sleep(Options.resolveRespawn);
 					} catch (InterruptedException e) {
-						//e.printStackTrace();
+						// e.printStackTrace();
 					}
 
 					try {
@@ -278,7 +279,8 @@ public class Resolver {
 	 * Aggiunge un messaggio al log con timestamp in modo thread-safe.
 	 */
 	public static void appendLog(String message) {
-		MFPCrawler.crawlerWindow.appendLog(message);
+		if (MFPCrawler.crawlerWindow != null)
+			MFPCrawler.crawlerWindow.appendLog(message);
 	}
 
 	public static <T extends OID_DATA_BASE> void updateOIDSLocal(SNMPHost host, String vendor) {
@@ -300,7 +302,7 @@ public class Resolver {
 			if (v == Null.noSuchObject) {
 				MFPCrawler.crawlerWindow.appendLog("   error:" + o.pretty);
 			} else
-				MFPCrawler.crawlerWindow.appendLog("   hasValue:" + o.pretty+(o.isForced()?"[forced]":""));
+				MFPCrawler.crawlerWindow.appendLog("   hasValue:" + o.pretty + (o.isForced() ? "[forced]" : ""));
 		}
 	}
 
@@ -328,7 +330,7 @@ public class Resolver {
 							});
 
 					for (Map<String, String> entry : jmap) {
-						OID_DATA_BASE o = factory.apply(entry); 
+						OID_DATA_BASE o = factory.apply(entry);
 						l.add(o);
 					}
 					appendLog("register:" + url);
@@ -348,7 +350,7 @@ public class Resolver {
 
 	static void resolveRemote(SNMPHost host) {
 		Variable v = host.values.get(OID_DATA.OID_SYS_OBJECT_ID.OID);
-		if (v==null)
+		if (v == null)
 			return;
 		String vendor = v.toString();
 
