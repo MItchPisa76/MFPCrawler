@@ -61,7 +61,7 @@
 					<type>EXE</type>
 					
 					<!-- Icona personalizzata per l'applicazione e l'installer (.ico necessario su Windows) -->
-					<icon>src/main/resources/icon.ico</icon>
+					 <icon>${project.basedir}/src/main/resources/icon.ico</icon>
 					
 					<!-- Abilita la possibilità per l'utente di scegliere la directory di installazione -->
 					<winDirChooser>true</winDirChooser>
