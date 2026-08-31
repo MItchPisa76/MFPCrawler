@@ -1,50 +1,29 @@
 package mtc.MFPCrawler;
 
 import java.awt.Color;
-import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
-import org.snmp4j.CommunityTarget;
-import org.snmp4j.PDU;
-import org.snmp4j.Snmp;
-import org.snmp4j.TransportMapping;
-import org.snmp4j.event.ResponseEvent;
-import org.snmp4j.mp.SnmpConstants;
-import org.snmp4j.smi.Address;
-import org.snmp4j.smi.GenericAddress;
 import org.snmp4j.smi.Null;
-import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.Variable;
-import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -319,7 +298,7 @@ public class Resolver {
 
 			try {
 
-				System.out.println("Invio richiesta get in corso..." + url);
+				System.out.println("Invio resolveOIDSRemote get in corso..." + url);
 				HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {

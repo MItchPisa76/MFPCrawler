@@ -1,7 +1,5 @@
 package mtc.MFPCrawler;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,26 +10,21 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
-import java.sql.Time;
-import java.text.DateFormat;
+import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import java.util.HashMap;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -49,7 +42,6 @@ import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.GenericAddress;
-import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.Null;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
@@ -60,7 +52,7 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 public class SNMPHost {
 	String ipV4address;
 	ConcurrentHashMap<String, Variable> values = new ConcurrentHashMap<String, Variable>();
-	
+
 	JPanel jp;
 	JTabbedPane jtp;
 
@@ -488,7 +480,7 @@ public class SNMPHost {
 				return;
 			}
 
-			appendLog("sendSNMPQuery to:" + address + " OID:"+OIDreq);
+			appendLog("sendSNMPQuery to:" + address + " OID:" + OIDreq);
 			TransportMapping<?> transport = new DefaultUdpTransportMapping();
 			Snmp snmp = new Snmp(transport);
 			transport.listen();
@@ -506,30 +498,38 @@ public class SNMPHost {
 			pdu.setType(PDU.GETBULK);
 			pdu.setNonRepeaters(0); // 0 = Tutti gli OID nella lista sono tabellari
 			pdu.setMaxRepetitions(5000);
-			
+
 			ResponseEvent<Address> response = snmp.send(pdu, target);
 
 			if (response == null || response.getResponse() == null) {
 
 			} else {
-				Map<String,String> map = new HashMap<String,String>();
+				Map<String, String> map = new HashMap<String, String>();
 				for (VariableBinding aa : response.getResponse().getVariableBindings()) {
 					String oo = aa.getOid().toString();
 					map.put(oo, aa.toValueString());
-					System.out.println(oo+">"+aa.toValueString());
+					System.out.println(oo + ">" + aa.toValueString());
 				}
+
+				String json = Resolver.mapper.writeValueAsString(map);
 				HttpClient client = Options.getHttpClient();
 				String url = Options.getResolveServer() + "/snmpquery";
 
 				Builder builder = HttpRequest.newBuilder().uri(URI.create(url))
-						.header("Content-Type", "application/json").header("token", Options.token);
+						.header("Content-Type", "application/json")
+						.header("token", Options.token).header("OID", OIDreq);
 
-			//	HttpRequest	request = builder.POST(BodyPublishers.ofString(jsonPayload)).build();
-				
-			//	HttpResponse<String> hres = client.send(request, HttpResponse.BodyHandlers.ofString());
+				HttpRequest request = builder.POST(BodyPublishers.ofString(json)).build();
 
+				HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+				if (resp.statusCode() == 200) {
+					appendLog("    <:" + address + " OID:" + OIDreq + "");
+				} else {
+					Resolver.onError(resp.body() + ":" + resp.statusCode(), Color.orange);
+					System.err.println("    error:" + resp.body() + ":" + resp.statusCode());
+				}
 			}
-				
+
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -668,7 +668,6 @@ public class SNMPHost {
 				map.put("maintenace", lm);
 				map.put("alerts", la);
 				map.put("ipv4", ipV4address);
-				
 
 				String jsonPayload = Options.mapper.writeValueAsString(map);
 				Builder builder = HttpRequest.newBuilder().uri(URI.create(url))

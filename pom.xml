@@ -33,7 +33,9 @@
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>${app.main.class}</mainClass>
-									<!-- Percorso dell'immagine Splash all'interno delle risorse (src/main/resources/splash.png) -->
+									<!-- Percorso dell'immagine Splash
+									all'interno delle risorse
+									(src/main/resources/splash.png) -->
 									<manifestEntries>
 										<SplashScreen-Image>splash.png</SplashScreen-Image>
 									</manifestEntries>
@@ -59,19 +61,27 @@
 					<mainJar>MFPCrawler-fat.jar</mainJar>
 					<input>target</input>
 					<type>EXE</type>
-					
-					<!-- Icona personalizzata per l'applicazione e l'installer (.ico necessario su Windows) -->
-					 <icon>${project.basedir}/src/main/resources/icon.ico</icon>
-					
-					<!-- Abilita la possibilità per l'utente di scegliere la directory di installazione -->
+
+					<!-- Icona personalizzata per l'applicazione e l'installer
+					(.ico necessario su Windows) -->
+					<icon>${project.basedir}/src/main/resources/icon.ico</icon>
+
+					<!-- Abilita la possibilità per l'utente di scegliere la
+					directory di installazione -->
 					<winDirChooser>true</winDirChooser>
-					
+
 					<!-- Menu Start e Desktop -->
 					<windowsMenu>true</windowsMenu>
-					<windowsMenuGroup>Mitch Pisa</windowsMenuGroup>
+					<windowsMenuGroup>MitchApp</windowsMenuGroup>
 					<windowsShortcut>true</windowsShortcut>
 					<windowsInstallerMenu>true</windowsInstallerMenu>
-					
+
+					<windowsMenu>true</windowsMenu>
+					<!-- Commenta o rimuovi questa riga per evitare la cartella
+					separata -->
+					<windowsMenuGroup>Mitch Apps</windowsMenuGroup>
+					<windowsShortcut>true</windowsShortcut>
+
 					<runtimeImage>${java.home}</runtimeImage>
 				</configuration>
 				<executions>

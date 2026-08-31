@@ -1,12 +1,5 @@
 package mtc.MFPCrawler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -26,20 +20,19 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.net.http.HttpResponse;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 
 public class Options {
 
@@ -133,7 +126,7 @@ public class Options {
 	public static void readServerResponse(String json) {
 		try {
 			System.out.println("Contenuto: " + json);
-			ObjectMapper mapper = new ObjectMapper();
+			
 			Map<String, String> jmap = mapper.readValue(json, new TypeReference<Map<String, String>>() {
 			});
 			String ntoken = jmap.get("token");
