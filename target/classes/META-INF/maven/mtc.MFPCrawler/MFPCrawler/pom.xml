@@ -14,8 +14,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<app.main.class>mtc.MFPCrawler.MFPCrawler</app.main.class>
 	</properties>
+
 	<build>
 		<plugins>
+			<!-- 1. Configurazione Fat JAR con Splash-Screen nel Manifest -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -31,6 +33,10 @@
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>${app.main.class}</mainClass>
+									<!-- Percorso dell'immagine Splash all'interno delle risorse (src/main/resources/splash.png) -->
+									<manifestEntries>
+										<SplashScreen-Image>splash.png</SplashScreen-Image>
+									</manifestEntries>
 								</transformer>
 							</transformers>
 							<finalName>${project.artifactId}-fat</finalName>
@@ -39,6 +45,7 @@
 				</executions>
 			</plugin>
 
+			<!-- 2. Configurazione jpackage per Installer Windows completo -->
 			<plugin>
 				<groupId>org.panteleyev</groupId>
 				<artifactId>jpackage-maven-plugin</artifactId>
@@ -52,11 +59,19 @@
 					<mainJar>MFPCrawler-fat.jar</mainJar>
 					<input>target</input>
 					<type>EXE</type>
+					
+					<!-- Icona personalizzata per l'applicazione e l'installer (.ico necessario su Windows) -->
+					<icon>src/main/resources/icon.ico</icon>
+					
+					<!-- Abilita la possibilità per l'utente di scegliere la directory di installazione -->
+					<winDirChooser>true</winDirChooser>
+					
+					<!-- Menu Start e Desktop -->
 					<windowsMenu>true</windowsMenu>
 					<windowsMenuGroup>Mitch Pisa</windowsMenuGroup>
 					<windowsShortcut>true</windowsShortcut>
 					<windowsInstallerMenu>true</windowsInstallerMenu>
-					<!-- Add this to use the JDK's built-in runtime -->
+					
 					<runtimeImage>${java.home}</runtimeImage>
 				</configuration>
 				<executions>
@@ -70,6 +85,7 @@
 			</plugin>
 		</plugins>
 	</build>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.snmp4j</groupId>

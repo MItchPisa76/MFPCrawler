@@ -344,8 +344,10 @@ public class Options {
 	}
 
 	public static void load(File file) throws IOException, IllegalAccessException {
-		if (!file.exists())
+		if (!file.exists()) {
+			save(new File(defaultFile));
 			return;
+		}
 		setOptionSource(_OptionsSource.file);
 
 		Map<String, Object> map = mapper.readValue(file, new TypeReference<Map<String, Object>>() {
