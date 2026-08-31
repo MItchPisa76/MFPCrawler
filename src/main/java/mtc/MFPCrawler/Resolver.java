@@ -118,6 +118,14 @@ public class Resolver {
 		return true;
 	}
 
+	static synchronized boolean handShaking() {
+
+		appendLog("  handShacking:" + address);
+		statusLabel.setText("Stato: handShacking");
+		statusLabel.setForeground(new Color(20, 207, 3));	
+		return true;
+	}
+	
 	static synchronized boolean offLine() {
 		if (isOffLine)
 			return false;

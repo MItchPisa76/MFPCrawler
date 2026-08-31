@@ -122,6 +122,7 @@ public class OID_DATA extends OID_DATA_BASE {
 	};
 	public final static OID_DATA OID_SYS_NAME = new OID_DATA("1.3.6.1.2.1.1.5.0", "OID_SYS_NAME", "Host Name");
 	public final static OID_DATA OID_SYS_SERIAL = new OID_DATA("1.3.6.1.2.1.43.5.1.1.17.1", "sysSerial", "Serial");
+	public final static OID_DATA OID_SYS_TOTAL_COUNTER = new OID_DATA("1.3.6.1.2.1.43.10.2.1.4.1.1", "prtMarkerLifeCount", "Total counter");
 
 	public final static OID_DATA OID_SYS_OBJECT_ID = new OID_DATA("1.3.6.1.2.1.1.2.0", "sysObjectID", "Vendor Name");
 //	public final static OID_DATA OID_SYS_SERIAL = new OID_DATA("1.3.6.1.2.1.43.5.1.1.17.1", "sysSerial", "Serial");

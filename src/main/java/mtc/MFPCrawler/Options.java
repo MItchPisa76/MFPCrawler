@@ -228,7 +228,6 @@ public class Options {
 		try {
 			if (!Resolver.isOffLine) {
 
-				setOptionSource(_OptionsSource.server);
 				String url = Options.getResolveServer() + "/options";
 
 				HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url))
@@ -245,10 +244,13 @@ public class Options {
 				System.out.println("Risposta ricevuta! Codice di stato: " + response.statusCode());
 				if (response.statusCode() == 200) {
 					readServerResponse(response.body());
+
+					setOptionSource(_OptionsSource.server);
 				} else {
 					Resolver.onError(response.body() + ":" + response.statusCode(), Color.orange);
 					System.err.println("Impossibile recuperare le opzioni: " + response.statusCode());
 				}
+				
 			}
 		} catch (InterruptedException | JsonProcessingException e) {
 			Resolver.onError(e.getMessage(), Color.red);

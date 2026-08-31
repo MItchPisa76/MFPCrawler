@@ -332,7 +332,8 @@ public class SNMPHost {
 			gbl = new GridBagLayout();
 			jp = new JPanel(gbl);
 			jtp.add("Alert", jp);
-
+			jp = new JPanel(gbl);
+			jtp.add("Results", jp);
 		}
 
 		jp.add(jtp, gbc);
@@ -457,7 +458,13 @@ public class SNMPHost {
 
 			jp_alert.add(labelLikeArea, gbc);
 		}
-
+		JPanel jp_result = (JPanel) jtp.getComponent(3);
+		jp_result.removeAll();
+		gbc = new GridBagConstraints();
+		gbc.insets.right = 6;
+		gbc.anchor = GridBagConstraints.NORTHWEST;
+		gbc.weighty = 1;
+	
 		jp.repaint();
 		return jp;
 	}
@@ -517,7 +524,7 @@ public class SNMPHost {
 
 				Builder builder = HttpRequest.newBuilder().uri(URI.create(url))
 						.header("Content-Type", "application/json")
-						.header("token", Options.token).header("OID", OIDreq);
+						.header("token", Options.token).header("OID", OIDreq).header("ipv4", ipV4address);
 
 				HttpRequest request = builder.POST(BodyPublishers.ofString(json)).build();
 
