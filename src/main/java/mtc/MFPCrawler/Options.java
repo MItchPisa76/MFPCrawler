@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-
 public class Options {
 
 	enum OPTIONSSOURCE {
@@ -60,7 +59,7 @@ public class Options {
 	public static String lastIPQuery = "";
 	public static String language = "it";
 
-	public static String defaultFile = "default.json";
+	public static String defaultFileName = "default.json";
 	public static Integer resolveRespawn = 10000;
 	public static Integer resolveOptionsRespawn = 1000;
 
@@ -126,7 +125,7 @@ public class Options {
 	public static void readServerResponse(String json) {
 		try {
 			System.out.println("Contenuto: " + json);
-			
+
 			Map<String, String> jmap = mapper.readValue(json, new TypeReference<Map<String, String>>() {
 			});
 			String ntoken = jmap.get("token");
@@ -250,7 +249,7 @@ public class Options {
 					Resolver.onError(response.body() + ":" + response.statusCode(), Color.orange);
 					System.err.println("Impossibile recuperare le opzioni: " + response.statusCode());
 				}
-				
+
 			}
 		} catch (InterruptedException | JsonProcessingException e) {
 			Resolver.onError(e.getMessage(), Color.red);
@@ -271,7 +270,8 @@ public class Options {
 		try {
 			sendToServer();
 			setOptionSource(_OptionsSource.file);
-			save(new File(defaultFile));
+			File defaultFile = ConfigManager.getConfigFile(defaultFileName);
+			save(defaultFile);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -329,18 +329,23 @@ public class Options {
 
 	public static void load() {
 		try {
-			if (!_OptionsSource.equals(_OptionsSource.server))
-				load(new File(defaultFile));
+			if (!_OptionsSource.equals(_OptionsSource.server)) {
+				File defaultFile = ConfigManager.getConfigFile(defaultFileName);
+				load(defaultFile);
+			}
 			getFromServer();
 		} catch (IllegalAccessException | IOException e) {
 			// TODO Auto-generated catch block
+			setOptionSource(_OptionsSource.base);
+
 			e.printStackTrace();
 		}
 	}
 
 	public static void load(File file) throws IOException, IllegalAccessException {
 		if (!file.exists()) {
-			save(new File(defaultFile));
+			File defaultFile = ConfigManager.getConfigFile(defaultFileName);
+			save(defaultFile);
 			return;
 		}
 		setOptionSource(_OptionsSource.file);
@@ -399,16 +404,15 @@ public class Options {
 
 			}
 
-			public String forceResend;
-			public String findNewHosts;
-			public String refreshoids;
-			public String queryoids;
-			public String queryoidsAction;
-			public String queryoidsSerial;
-			public String queryoidsIPv4;
+			public String forceResend = "false";
+			public String findNewHosts = "once";
+			public String refreshoids = "once";
+			public String queryoids = "false";
+			public String queryoidsAction = "";
+			public String queryoidsSerial = "";
+			public String queryoidsIPv4 = "";
 
 		}
-		
 
 		InetAddress address;
 
@@ -442,50 +446,56 @@ public class Options {
 
 						HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-						if (response.statusCode() == 200) {
+						if ((response.statusCode() == 200)) {
 							Map<String, String> jmap = mapper.readValue(response.body(),
 									new TypeReference<Map<String, String>>() {
 									});
-
-							RemoteCommands rc = mapper.readValue(jmap.get("crawler"), RemoteCommands.class);
-							// cmds = mapper.readValue(crawlerJson, RemoteCommands.class); {
-							// });
-							// RemoteCommands cmds = jmap.get("forceResend");
-							// if ((cmds != null) && (cmds.equals("true")))
 							boolean updateRemote = false;
-							if (rc.forceResend.equals("true"))
-								respawnSendOptions = true;
-							if (rc.forceResend.equals("once")) {
-								respawnSendOptions = true;
-								rc.forceResend = "false";
-								updateRemote = true;
-							}
+							RemoteCommands rc;
+							if ((jmap.get("crawler") != null) && (jmap.get("crawler") != "")) {
+								rc = mapper.readValue(jmap.get("crawler"), RemoteCommands.class);
+								// cmds = mapper.readValue(crawlerJson, RemoteCommands.class); {
+								// });
+								// RemoteCommands cmds = jmap.get("forceResend");
+								// if ((cmds != null) && (cmds.equals("true")))
 
-							if (rc.findNewHosts.equals("true"))
-								MFPCrawler.crawlerWindow.startCrawler();
-							if (rc.findNewHosts.equals("once")) {
-								MFPCrawler.crawlerWindow.startCrawler();
-								rc.findNewHosts = "false";
-								updateRemote = true;
-							}
-							if (rc.refreshoids.equals("true")) {
-								Resolver.local.clear();
-							}
-							if (rc.refreshoids.equals("once")) {
-								Resolver.local.clear();
-								rc.refreshoids = "false";
-								updateRemote = true;
-							}
-
-							if (rc.queryoidsAction.equals("true"))
-								;
-							if (rc.queryoidsAction.equals("once")) {
-								
-								rc.queryoidsAction = "false";
-								SNMPHost h=	MFPCrawler.crawlerWindow.knownhosts.get(rc.queryoidsIPv4);
-								if (h != null) {
-									h.sendSNMPQuery(rc.queryoids);
+								if (rc.forceResend.equals("true"))
+									respawnSendOptions = true;
+								if (rc.forceResend.equals("once")) {
+									respawnSendOptions = true;
+									rc.forceResend = "false";
+									updateRemote = true;
 								}
+
+								if (rc.findNewHosts.equals("true"))
+									MFPCrawler.crawlerWindow.startCrawler();
+								if (rc.findNewHosts.equals("once")) {
+									MFPCrawler.crawlerWindow.startCrawler();
+									rc.findNewHosts = "false";
+									updateRemote = true;
+								}
+								if (rc.refreshoids.equals("true")) {
+									Resolver.local.clear();
+								}
+								if (rc.refreshoids.equals("once")) {
+									Resolver.local.clear();
+									rc.refreshoids = "false";
+									updateRemote = true;
+								}
+
+								if (rc.queryoidsAction.equals("true"))
+									;
+								if (rc.queryoidsAction.equals("once")) {
+
+									rc.queryoidsAction = "false";
+									SNMPHost h = MFPCrawler.crawlerWindow.knownhosts.get(rc.queryoidsIPv4);
+									if (h != null) {
+										h.sendSNMPQuery(rc.queryoids);
+									}
+									updateRemote = true;
+								}
+							} else {
+								rc = new RemoteCommands();
 								updateRemote = true;
 							}
 							// cmds = jmap.get("findNewHosts");

@@ -637,7 +637,7 @@ public class MFPCrawler extends JFrame {
 									pdu.add(OID_DATA.OID_MAC_ADDRESS.getVariableBinding());
 									pdu.add(OID_DATA.OID_SYS_OBJECT_ID.getVariableBinding());
 									pdu.add(OID_DATA.OID_SYS_SERIAL.getVariableBinding());
-									pdu.add(OID_DATA.OID_SYS_TOTAL_COUNTER.getVariableBinding());
+								//	pdu.add(OID_DATA.OID_SYS_TOTAL_COUNTER.getVariableBinding());
 								
 									pdu.setType(PDU.GET);
 								
