@@ -17,7 +17,7 @@
 
 	<build>
 		<plugins>
-			<!-- 1. Configurazione Fat JAR con Splash-Screen nel Manifest -->
+			<!-- 1. Configurazione Fat JAR (Include dipendenze e Splash Screen) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -30,13 +30,10 @@
 						</goals>
 						<configuration>
 							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>${app.main.class}</mainClass>
-									<!-- Percorso dell'immagine Splash
-									all'interno delle risorse
-									(src/main/resources/splash.png) -->
 									<manifestEntries>
+										<!-- Imm. Splash dentro src/main/resources/splash.png -->
 										<SplashScreen-Image>splash.png</SplashScreen-Image>
 									</manifestEntries>
 								</transformer>
@@ -47,42 +44,87 @@
 				</executions>
 			</plugin>
 
-			<!-- 2. Configurazione jpackage per Installer Windows completo -->
+			<!-- 2. Configurazione jpackage con TUTTI I PARAMETRI -->
 			<plugin>
 				<groupId>org.panteleyev</groupId>
 				<artifactId>jpackage-maven-plugin</artifactId>
-				<version>1.4.0</version>
+				<version>1.6.0</version>
 				<configuration>
+					<!-- ==================================================== -->
+					<!-- PARAMETRI GENERALI DELL'APPLICAZIONE                -->
+					<!-- ==================================================== -->
+					<!-- Nome dell'applicazione ed eseguibile (.exe) -->
 					<name>MFPCrawler</name>
+					
+					<!-- Versione (Formato numerico puro: es. 1.0.0) -->
 					<appVersion>1.0.0</appVersion>
+					
+					<!-- Produttore / Autore -->
 					<vendor>Mitch Pisa</vendor>
-					<destination>target/dist</destination>
+					
+					<!-- Descrizione visibile nelle proprietà del file Windows -->
+					<description>Find SNMP MFP in local network</description>
+					
+					<!-- Informazioni sul Copyright -->
+					<copyright>Copyright 2026 Mitch Pisa</copyright>
+					
+					<!-- Classe Main dell'applicazione -->
 					<mainClass>${app.main.class}</mainClass>
+					
+					<!-- JAR principale con tutte le dipendenze -->
 					<mainJar>MFPCrawler-fat.jar</mainJar>
+					
+					<!-- Directory contenente il file JAR (target) -->
 					<input>target</input>
+					
+					<!-- Directory di destinazione per l'installer generato -->
+					<destination>target/dist</destination>
+					
+					<!-- Tipo di pacchetto: EXE o MSI -->
 					<type>EXE</type>
-
-					<!-- Icona personalizzata per l'applicazione e l'installer
-					(.ico necessario su Windows) -->
+					
+					<!-- Path assoluto dell'icona (.ico per Windows) -->
 					<icon>${project.basedir}/src/main/resources/icon.ico</icon>
+					
+					<!-- JRE o JDK da includere nel bundle -->
+					<runtimeImage>${java.home}</runtimeImage>
 
-					<!-- Abilita la possibilità per l'utente di scegliere la
-					directory di installazione -->
+					<!-- ==================================================== -->
+					<!-- PARAMETRI SPECIFICI PER WINDOWS E MENU START        -->
+					<!-- ==================================================== -->
+					<!-- Forza la creazione della voce nel Menu Start -->
+					<winMenu>true</winMenu>
+					
+					<!-- Lascia vuoto o ometti per posizionare l'icona direttamente 
+					     nella radice delle app del Menu Start di Win 10/11 -->
+					<winMenuGroup>MFPCrawler</winMenuGroup>
+
+					<!-- Crea il collegamento sul Desktop -->
+					<winShortcut>true</winShortcut>
+					
+					<!-- Abilita il bottone 'Sfoglia' per la cartella di installazione -->
 					<winDirChooser>true</winDirChooser>
 
-					<!-- Menu Start e Desktop -->
-					<windowsMenu>true</windowsMenu>
-					<windowsMenuGroup>MitchApp</windowsMenuGroup>
-					<windowsShortcut>true</windowsShortcut>
-					<windowsInstallerMenu>true</windowsInstallerMenu>
+					<!-- Installazione per singolo utente (senza richiedere Admin/UAC).
+					     Risolve spesso i problemi di mancata visualizzazione nel Menu Start! -->
+					<winPerUserInstall>true</winPerUserInstall>
 
-					<windowsMenu>true</windowsMenu>
-					<!-- Commenta o rimuovi questa riga per evitare la cartella
-					separata -->
-					<windowsMenuGroup>Mitch Apps</windowsMenuGroup>
-					<windowsShortcut>true</windowsShortcut>
+					<!-- Permette di creare un collegamento nel Menu Start per disinstallare -->
+					<winShortcutPrompt>false</winShortcutPrompt>
 
-					<runtimeImage>${java.home}</runtimeImage>
+					<!-- Apre la finestra di console cmd all'avvio (utile per DEBUG) -->
+					<winConsole>false</winConsole>
+
+					<!-- ==================================================== -->
+					<!-- OPZIONALI: DYNAMIC ARGS E WIX TEMPLATES              -->
+					<!-- ==================================================== -->
+					<!-- Cartella contenente file di configurazione WiX personalizzati (se usati) -->
+					<!-- <resourceDir>${project.basedir}/src/main/jpackage</resourceDir> -->
+
+					<!-- Argomenti della JVM quando l'app viene avviata -->
+					<javaOptions>
+						<option>-Dfile.encoding=UTF-8</option>
+					</javaOptions>
 				</configuration>
 				<executions>
 					<execution>
@@ -116,6 +158,7 @@
 			<url>https://oosnmp.net/dist/release/</url>
 		</repository>
 	</repositories>
+
 	<name>MFPCrawler</name>
 	<description>Find snmp MFP in local network</description>
 </project>
