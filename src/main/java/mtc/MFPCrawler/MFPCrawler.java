@@ -23,13 +23,17 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -100,8 +104,8 @@ public class MFPCrawler extends JFrame {
 		public String localHostName;
 		public String localSubnet;
 	}
-	
-	public LocalData localData = new LocalData();
+
+	public ArrayList<LocalData> localDatas = new ArrayList<LocalData>();
 
 	public int[] scanner_start = { 192, 168, 2, 1 };
 	public int[] scanner_stop = { 192, 168, 2, 254 };
@@ -140,7 +144,10 @@ public class MFPCrawler extends JFrame {
 		public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
 			// TODO Auto-generated method stub
 			super.remove(fb, offset, length);
-
+			if (status.getText().equals("")) {
+			//	String str = localData.localIPv4.substring(0, localData.localIPv4.lastIndexOf(".")) + ".*";
+				//txtIpPattern.setText(str);
+			}
 			eseguiParsing(status);
 		}
 
@@ -149,9 +156,11 @@ public class MFPCrawler extends JFrame {
 				throws BadLocationException {
 			if (string.contains("\n"))
 				eseguiParsing(status);
-			if (permesso.matcher(string).matches()) {
+			else {
 				super.insertString(fb, offset, string, attr);
-				eseguiParsing(status);
+				if (permesso.matcher(status.getText()).matches()) {
+					eseguiParsing(status);
+				}
 			}
 		}
 
@@ -170,10 +179,6 @@ public class MFPCrawler extends JFrame {
 	private void eseguiParsing(JLabel status) {
 		String input = txtIpPattern.getText().trim();
 
-		if (input.equals("")) {
-			String str = localData.localIPv4.substring(0,  localData.localIPv4.lastIndexOf(".")) + ".*";
-			txtIpPattern.setText(str);
-		}
 		// Validazione formale tramite espressione regolare adattata per range e
 		// asterischi
 		String regexPart = "(\\d{1,3}|\\*|\\d{1,3}-\\d{1,3})";
@@ -219,6 +224,7 @@ public class MFPCrawler extends JFrame {
 
 	private JPanel getLocalNetworkPanel() {
 		try {
+
 			// Ottiene l'elenco di tutte le interfacce di rete attive sul computer
 			Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
 
@@ -238,21 +244,17 @@ public class MFPCrawler extends JFrame {
 
 					// Filtra per mostrare solo IPv4 (più leggibile per la subnet)
 					if (inetAddr instanceof Inet4Address) {
-						 localData.localIF = netIf.getDisplayName();
-						 localData.localHostName = inetAddr.getHostName();
-						 localData.localIPv4 = inetAddr.getHostAddress();
+						LocalData localData = new LocalData();
+						localData.localIF = netIf.getDisplayName();
+						localData.localHostName = inetAddr.getHostName();
+						localData.localIPv4 = inetAddr.getHostAddress();
 						short prefixLength = ifAddress.getNetworkPrefixLength();
-						 localData.localSubnet = convertiPrefissoInSubnet(prefixLength) + " (/" + prefixLength + ")";
+						localData.localSubnet = convertiPrefissoInSubnet(prefixLength) + " (/" + prefixLength + ")";
 
-						System.out.println("Interfaccia: " +  localData.localIF);
-						System.out.println("  IP locale:   " +  localData.localIPv4 + "   " +  localData.localHostName);
-
-						// Calcola la Subnet Mask dalla lunghezza del prefisso (es. /24 ->
-						// 255.255.255.0)
-
+						System.out.println("Interfaccia: " + localData.localIF);
+						System.out.println("  IP locale:   " + localData.localIPv4 + "   " + localData.localHostName);
+						localDatas.add(localData);
 					}
-					// System.out.println(" -> Indirizzo IP: " + inetAddress.getHostAddress() +
-					// ":"+inetAddress.);
 				}
 			}
 		} catch (SocketException e) {
@@ -262,56 +264,64 @@ public class MFPCrawler extends JFrame {
 		if (netPanel == null)
 			netPanel = new JPanel(new GridBagLayout());
 		netPanel.removeAll();
-		// Aggiunge un po' di spazio vuoto (padding) attorno al pannello
-		netPanel.setBorder(new TitledBorder( localData.localIF));
-
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(6, 10, 6, 10); // Spazio tra i singoli elementi
-		gbc.anchor = GridBagConstraints.WEST; // Allinea il testo a sinistra
+		
+		
 
 		// --- Configurazione Font ---
 		Font fontLabel = new Font("Arial", Font.BOLD, 12);
 		Font fontValue = new Font("Arial", Font.PLAIN, 12);
 		Font fontMsg = new Font("Arial", Font.PLAIN, 8);
 
-		// ================= RIGA 1 =================
-		// Hostname
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		JLabel lblHost = new JLabel("Hostname:");
-		lblHost.setFont(fontLabel);
-		netPanel.add(lblHost, gbc);
+		JTabbedPane jtb = new JTabbedPane();
 
-		gbc.gridx = 1;
-		JLabel txtHost = new JLabel( localData.localHostName);
-		txtHost.setFont(fontValue);
-		netPanel.add(txtHost, gbc);
+		netPanel.add(jtb);
+		for (LocalData localData : localDatas) {
 
-		// IP Locale
-		gbc.gridx = 2;
-		JLabel lblIp = new JLabel("IP Locale:");
-		lblIp.setFont(fontLabel);
-		netPanel.add(lblIp, gbc);
+			JPanel ifPanel = new JPanel();
+			jtb.add(localData.localIF,ifPanel);
 
-		gbc.gridx = 3;
+			GridBagConstraints gbc = new GridBagConstraints();
+			gbc.insets = new Insets(6, 10, 6, 10); // Spazio tra i singoli elementi
+			gbc.anchor = GridBagConstraints.WEST; // Allinea il testo a sinistra
 
-		JLabel txtIp = new JLabel( localData.localIPv4);
-		txtIp.setFont(fontValue);
-		netPanel.add(txtIp, gbc);
+			// ================= RIGA 1 =================
+			// Hostname
+			gbc.gridx = 0;
+			gbc.gridy = 0;
+			JLabel lblHost = new JLabel("Hostname:");
+			lblHost.setFont(fontLabel);
+			ifPanel.add(lblHost, gbc);
 
-		// ================= RIGA 2 =================
-		// Subnet Mask
-		gbc.gridx = 0;
-		gbc.gridy = 1;
-		JLabel lblSubnet = new JLabel("Subnet Mask:");
-		lblSubnet.setFont(fontLabel);
-		netPanel.add(lblSubnet, gbc);
+			gbc.gridx = 1;
+			JLabel txtHost = new JLabel(localData.localHostName);
+			txtHost.setFont(fontValue);
+			ifPanel.add(txtHost, gbc);
 
-		gbc.gridx = 1;
-		JLabel txtSubnet = new JLabel( localData.localSubnet);
-		txtSubnet.setFont(fontValue);
-		netPanel.add(txtSubnet, gbc);
+			// IP Locale
+			gbc.gridx = 2;
+			JLabel lblIp = new JLabel("IP Locale:");
+			lblIp.setFont(fontLabel);
+			ifPanel.add(lblIp, gbc);
 
+			gbc.gridx = 3;
+
+			JLabel txtIp = new JLabel(localData.localIPv4);
+			txtIp.setFont(fontValue);
+			ifPanel.add(txtIp, gbc);
+
+			// ================= RIGA 2 =================
+			// Subnet Mask
+			gbc.gridx = 0;
+			gbc.gridy = 1;
+			JLabel lblSubnet = new JLabel("Subnet Mask:");
+			lblSubnet.setFont(fontLabel);
+			ifPanel.add(lblSubnet, gbc);
+
+			gbc.gridx = 1;
+			JLabel txtSubnet = new JLabel(localData.localSubnet);
+			txtSubnet.setFont(fontValue);
+			ifPanel.add(txtSubnet, gbc);
+		}
 		// Interfaccia
 		gbc.gridx = 2;
 		JPanel jp = new JPanel(new GridLayout(2, 2));
@@ -637,10 +647,9 @@ public class MFPCrawler extends JFrame {
 									pdu.add(OID_DATA.OID_MAC_ADDRESS.getVariableBinding());
 									pdu.add(OID_DATA.OID_SYS_OBJECT_ID.getVariableBinding());
 									pdu.add(OID_DATA.OID_SYS_SERIAL.getVariableBinding());
-								//	pdu.add(OID_DATA.OID_SYS_TOTAL_COUNTER.getVariableBinding());
-								
+									// pdu.add(OID_DATA.OID_SYS_TOTAL_COUNTER.getVariableBinding());
+
 									pdu.setType(PDU.GET);
-								
 
 									ResponseEvent<Address> response = snmp.send(pdu, target);
 									snmp.close();
@@ -674,7 +683,7 @@ public class MFPCrawler extends JFrame {
 			outJP.removeAll();
 			gbc.gridwidth = GridBagConstraints.REMAINDER;
 			gbc.fill = GridBagConstraints.BOTH;
-			
+
 			for (SNMPHost h : knownhosts.values()) {
 				outJP.add(h.getPanel(), gbc);
 			}
@@ -752,13 +761,28 @@ public class MFPCrawler extends JFrame {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception ignored) {
 		}
+		try {
+	        Path logDir = Options.getAppDataDirectory().resolve("logs");
+	        Files.createDirectories(logDir);
+	        
+	        Path logFile = logDir.resolve("app.log");
+	        PrintStream logStream = new PrintStream(Files.newOutputStream(logFile), true);
+
+	        // Reindirizza stdout e stderr sullo stesso file di log
+	        System.setOut(logStream);
+	        System.setErr(logStream);
+
+	        System.out.println("=== Avvio applicazione MFPCrawler ===");
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 		Options.load();
 		SwingUtilities.invokeLater(() -> {
 			crawlerWindow = new MFPCrawler();
 			crawlerWindow.setVisible(true);
 			Options.startCrawler();
 			Resolver.startCrawler();
-			
+
 			crawlerWindow.startCrawler();
 		});
 	}
