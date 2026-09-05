@@ -1,7 +1,6 @@
 name: Build Windows 64-bit Installer
 
 on:
-  # Allows manual execution by pressing a button in GitHub
   workflow_dispatch:
     inputs:
       environment:
@@ -13,12 +12,11 @@ on:
         - local-network
         - production
 
-  # Automatically triggers when a GitHub Release is published
   release:
     types: [published]
 
 permissions:
-  contents: write  # Required for uploading files to releases
+  contents: write
 
 jobs:
   build-windows:
@@ -36,8 +34,8 @@ jobs:
         architecture: x64
         cache: 'maven'
 
-    # Conditionally inject local certificate if triggered manually with 'local-network' or on release
-    - name: Importa certificato SSL nel cacerts della JDK (Local Network)
+    <!-- Iniezione del certificato SSL dal Repository Secret se richiesto -->
+    - name: Importa certificato SSL nel cacerts della JDK
       if: ${{ github.event_name == 'release' || inputs.environment == 'local-network' }}
       shell: bash
       run: |
@@ -53,7 +51,25 @@ jobs:
     - name: Costruisci il progetto e l'installer con Maven
       run: mvn clean verify
 
-    - name: Carica l'installer generato nella Release di GitHub
+    <!-- Aggiornamento automatico della tabella nel README ad ogni nuova release -->
+    - name: Aggiungi nuova versione al README.md
+      if: ${{ github.event_name == 'release' }}
+      shell: bash
+      run: |
+        TAG_NAME="${{ github.event.release.tag_name }}"
+        EXE_FILE=$(basename $(ls target/dist/*.exe | head -n 1))
+        DOWNLOAD_URL="https://github.com/MitchPisa76/MFPCrawler/releases/download/$TAG_NAME/$EXE_FILE"
+        NEW_ROW="| **$TAG_NAME** | [⚡ Scarica $EXE_FILE]($DOWNLOAD_URL) |"
+        
+        sed -i "/<!-- DOWNLOAD_TABLE_MARKER -->/a $NEW_ROW" README.md
+        
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add README.md
+        git diff --quiet && git diff --staged --quiet || (git commit -m "docs: aggiunto link download per la versione $TAG_NAME [skip ci]" && git push)
+
+    <!-- Upload del file eseguibile allegato alla Release -->
+    - name: Carica l'installer nella Release di GitHub
       if: ${{ github.event_name == 'release' }}
       uses: softprops/action-gh-release@v2
       with:
@@ -61,9 +77,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    <!-- Upload dell'eseguibile come Artifact se avviato a mano dal pulsante -->
     - name: Salva l'installer come Artifact (dalla pressione del pulsante manuale)
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/upload-artifact@v4
       with:
-        name: Windows-Installer-EXE
-        path: target/dist/*.exe
+        name: MFPCrawler-Windows-Installer
+        path: target/dist/
