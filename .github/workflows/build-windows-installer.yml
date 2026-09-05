@@ -42,7 +42,7 @@ jobs:
         SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
         SOURCE_REPO_OWNER: MItchPisa76
         SOURCE_REPO_NAME: SNMPServer
-        SECRET_NAME: LOCAL_SERVER_CERT
+        SECRET_NAME: PAT_SECRET_SYNC
       shell: bash
       run: |
         # Recupera il secret dal repository esterno usando l'API di GitHub
