@@ -72,7 +72,7 @@ jobs:
         fi
         
         # Recupera la data corrente in formato YYYY-MM-DD
-        RELEASE_DATE=$(date +'%Y-%m-%d %h:%m')
+        RELEASE_DATE=$(date +'%Y-%m-%d %H:%M')
         
         # Isola il nome del file .exe
         EXE_FILE=$(basename $(ls target/dist/*.exe | grep -v 'temp' | head -n 1))
