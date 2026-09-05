@@ -110,10 +110,10 @@
 					<winPerUserInstall>false</winPerUserInstall>
 
 					<!-- Permette di creare un collegamento nel Menu Start per disinstallare -->
-					<winShortcutPrompt>false</winShortcutPrompt>
+					<winShortcutPrompt>true</winShortcutPrompt>
 
 					<!-- Apre la finestra di console cmd all'avvio (utile per DEBUG) -->
-					<winConsole>false</winConsole>
+					<winConsole>true</winConsole>
 
 					<!-- ==================================================== -->
 					<!-- OPZIONALI: DYNAMIC ARGS E WIX TEMPLATES              -->
