@@ -54,7 +54,7 @@ jobs:
       run: mvn clean verify
 
     - name: Aggiungi nuova versione al README.md
-      if: ${{ github.event_name == 'release' }}
+      if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
       shell: bash
       run: |
         TAG_NAME="${{ github.event.release.tag_name }}"
