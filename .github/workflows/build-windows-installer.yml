@@ -16,7 +16,7 @@ on:
     types: [published]
 
 permissions:
-  contents: write # Permette la creazione di Release e il push del README.md
+  contents: write
 
 jobs:
   build-windows:
@@ -26,11 +26,10 @@ jobs:
     - name: Controlla il codice sorgente
       uses: actions/checkout@v4
       with:
-        # Mantiene il token per consentire il push del README al bot
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configura Java (JDK 21 x64)
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -42,12 +41,21 @@ jobs:
       shell: bash
       run: |
         if [ -n "${{ secrets.LOCAL_SERVER_CERT }}" ]; then
+          echo "Certificato trovato nei Secrets. Importazione in corso..."
+          
+          # Crea la cartella di destinazione per la build
           mkdir -p src/main/resources/certs
           echo "${{ secrets.LOCAL_SERVER_CERT }}" > src/main/resources/certs/server.crt
+          
+          # Importa il certificato direttamente nel cacerts della JDK usata da jpackage
           "$JAVA_HOME/bin/keytool" -importcert -alias resolve-server \
             -file "src/main/resources/certs/server.crt" \
             -keystore "$JAVA_HOME/lib/security/cacerts" \
             -storepass changeit -noprompt
+            
+          echo "Certificato importato con successo nel keystore JDK."
+        else
+          echo "ATTENZIONE: Secret LOCAL_SERVER_CERT non trovato!"
         fi
 
     - name: Costruisci il progetto e l'installer con Maven
@@ -57,20 +65,31 @@ jobs:
       if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
       shell: bash
       run: |
+        # Recupera o assegna il nome del tag
         TAG_NAME="${{ github.event.release.tag_name }}"
-        # Isolamento del solo file .exe finale
+        if [ -z "$TAG_NAME" ]; then
+          TAG_NAME="v1.0.0-manual"
+        fi
+        
+        # Recupera la data corrente in formato YYYY-MM-DD
+        RELEASE_DATE=$(date +'%Y-%m-%d')
+        
+        # Isola il nome del file .exe
         EXE_FILE=$(basename $(ls target/dist/*.exe | grep -v 'temp' | head -n 1))
         DOWNLOAD_URL="https://github.com/MitchPisa76/MFPCrawler/releases/download/$TAG_NAME/$EXE_FILE"
-        NEW_ROW="| **$TAG_NAME** | [⚡ Scarica $EXE_FILE]($DOWNLOAD_URL) |"
         
-        # Aggiunta riga sotto il marcatore
+        # Costruisce la nuova riga con Versione, Data e Link
+        NEW_ROW="| **$TAG_NAME** | $RELEASE_DATE | [⚡ Scarica $EXE_FILE]($DOWNLOAD_URL) |"
+        
+        # Inserisce la riga in cima subito sotto il marcatore
         sed -i "/<!-- DOWNLOAD_TABLE_MARKER -->/a $NEW_ROW" README.md
         
-        # Configurazione Git ed push sicuro
+        # Commit e Push
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
-        git diff --quiet && git diff --staged --quiet || (git commit -m "docs: aggiunto link download per la versione $TAG_NAME [skip ci]" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "docs: aggiornato README per la versione $TAG_NAME [skip ci]" && git push)
+
     - name: Carica l'installer nella Release di GitHub
       if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v2
@@ -82,6 +101,7 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Salva l'installer come Artifact (dalla pressione del pulsante manuale)
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/upload-artifact@v4
