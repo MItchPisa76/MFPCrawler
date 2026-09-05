@@ -1,5 +1,4 @@
 name: Build Windows 64-bit Installer
-
 on:
   workflow_dispatch:
     inputs:
