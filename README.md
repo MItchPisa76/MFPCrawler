@@ -1,6 +1,6 @@
 ## 📥 Storico Versioni / Downloads
 
-
+keytool -list -keystore "$JAVA_HOME/lib/security/cacerts" -storepass changeit See whether the server's CA or root CA is present.
 //keytool -importcert -alias nodejs-server -file cert.pem -keystore "$JAVA_HOME/lib/security/cacerts" -storepass changeit -noprompt
 
 | Versione | Data Rilascio | Installer Windows (.exe) |

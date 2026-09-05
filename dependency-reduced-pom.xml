@@ -21,6 +21,9 @@
               <transformers>
                 <transformer>
                   <mainClass>${app.main.class}</mainClass>
+                  <manifestEntries>
+                    <SplashScreen-Image>splash.png</SplashScreen-Image>
+                  </manifestEntries>
                 </transformer>
               </transformers>
               <finalName>${project.artifactId}-fat</finalName>
@@ -31,7 +34,7 @@
       <plugin>
         <groupId>org.panteleyev</groupId>
         <artifactId>jpackage-maven-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>1.6.0</version>
         <executions>
           <execution>
             <phase>verify</phase>
@@ -44,15 +47,25 @@
           <name>MFPCrawler</name>
           <appVersion>1.0.0</appVersion>
           <vendor>Mitch Pisa</vendor>
-          <destination>target/dist</destination>
+          <description>Find SNMP MFP in local network</description>
+          <copyright>Copyright 2026 Mitch Pisa</copyright>
           <mainClass>${app.main.class}</mainClass>
-          <mainJar>${project.build.finalName}-fat.jar</mainJar>
+          <mainJar>MFPCrawler-fat.jar</mainJar>
           <input>target</input>
+          <destination>target/dist</destination>
           <type>EXE</type>
-          <windowsMenu>true</windowsMenu>
-          <windowsMenuGroup>Mitch Pisa</windowsMenuGroup>
-          <windowsShortcut>true</windowsShortcut>
-          <windowsInstallerMenu>true</windowsInstallerMenu>
+          <icon>${project.basedir}/src/main/resources/icon.ico</icon>
+          <runtimeImage>${java.home}</runtimeImage>
+          <winMenu>true</winMenu>
+          <winMenuGroup>MFPCrawler</winMenuGroup>
+          <winShortcut>true</winShortcut>
+          <winDirChooser>true</winDirChooser>
+          <winPerUserInstall>false</winPerUserInstall>
+          <winShortcutPrompt>true</winShortcutPrompt>
+          <winConsole>true</winConsole>
+          <javaOptions>
+            <option>-Dfile.encoding=UTF-8</option>
+          </javaOptions>
         </configuration>
       </plugin>
     </plugins>
@@ -65,8 +78,8 @@
     </repository>
   </repositories>
   <properties>
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <app.main.class>mtc.MFPCrawler.MFPCrawler</app.main.class>
   </properties>
