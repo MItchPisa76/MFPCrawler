@@ -45,6 +45,7 @@ jobs:
           # Crea la cartella di destinazione per la build
           mkdir -p src/main/resources/certs
           echo "${{ secrets.LOCAL_SERVER_CERT }}" > src/main/resources/cert.pem
+        fi
           
     - name: Costruisci il progetto e l'installer con Maven
       env:
