@@ -113,7 +113,7 @@
 					<winShortcutPrompt>false</winShortcutPrompt>
 
 					<!-- Apre la finestra di console cmd all'avvio (utile per DEBUG) -->
-					<winConsole>false</winConsole>
+					<winConsole>true</winConsole>
 
 					<!-- ==================================================== -->
 					<!-- OPZIONALI: DYNAMIC ARGS E WIX TEMPLATES              -->
