@@ -1,16 +1,1 @@
-{
-  "lastIPQuery" : "192.168.2.15-157",
-  "resolveOptionsRespawn" : 1000,
-  "language" : "it",
-  "autoSave" : true,
-  "primaryserver" : "localhost",
-  "community" : "public",
-  "respawnSendOptions" : false,
-  "primarysPort" : "3081",
-  "token" : "60439214756ccee36a76d1d0d3016c4703bed56800ff38fd5615682f02199d90",
-  "defaultFile" : "default.json",
-  "timeoutMs" : 10000,
-  "resolveRespawn" : 10000,
-  "theme" : "dark",
-  "fontSize" : 16
-}
+/home/mitch/.config/MFPCrawler/default.json

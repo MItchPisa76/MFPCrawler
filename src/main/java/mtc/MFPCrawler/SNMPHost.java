@@ -130,6 +130,8 @@ public class SNMPHost {
 	public Date lastUpdatedMantained;
 	Hashtable<Integer, MaintenanceRowOIDS> lm = new Hashtable<Integer, MaintenanceRowOIDS>();
 	Hashtable<Integer, AlertRowOIDS> la = new Hashtable<Integer, AlertRowOIDS>();
+	// Hashtable<Integer, CounterRowOIDS> ca = new Hashtable<Integer,
+	// CounterRowOIDS>();
 
 	class AlertRowOIDS {
 		int index = -1;
@@ -333,7 +335,7 @@ public class SNMPHost {
 			jp = new JPanel(gbl);
 			jtp.add("Alert", jp);
 			jp = new JPanel(gbl);
-			jtp.add("Results", jp);
+			jtp.add("Counters", jp);
 		}
 
 		jp.add(jtp, gbc);
@@ -458,13 +460,10 @@ public class SNMPHost {
 
 			jp_alert.add(labelLikeArea, gbc);
 		}
+
 		JPanel jp_result = (JPanel) jtp.getComponent(3);
 		jp_result.removeAll();
-		gbc = new GridBagConstraints();
-		gbc.insets.right = 6;
-		gbc.anchor = GridBagConstraints.NORTHWEST;
-		gbc.weighty = 1;
-	
+
 		jp.repaint();
 		return jp;
 	}
@@ -523,8 +522,8 @@ public class SNMPHost {
 				String url = Options.getResolveServer() + "/snmpquery";
 
 				Builder builder = HttpRequest.newBuilder().uri(URI.create(url))
-						.header("Content-Type", "application/json")
-						.header("token", Options.token).header("OID", OIDreq).header("ipv4", ipV4address);
+						.header("Content-Type", "application/json").header("token", Options.token).header("OID", OIDreq)
+						.header("ipv4", ipV4address);
 
 				HttpRequest request = builder.POST(BodyPublishers.ofString(json)).build();
 

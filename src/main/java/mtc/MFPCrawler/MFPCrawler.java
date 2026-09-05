@@ -222,8 +222,175 @@ public class MFPCrawler extends JFrame {
 		status.setText("OK");
 		status.setForeground(jtp.getForeground());
 	}
-
 	private JPanel getLocalNetworkPanel() {
+	    // 1. Svuota la lista per evitare schede duplicate al re-call
+	    localDatas.clear();
+
+	    try {
+	        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+	        for (NetworkInterface netIf : Collections.list(nets)) {
+	            if (!netIf.isUp() || netIf.isLoopback()) {
+	                continue;
+	            }
+
+	            List<InterfaceAddress> inetAddresses = netIf.getInterfaceAddresses();
+	            for (InterfaceAddress ifAddress : inetAddresses) {
+	                InetAddress inetAddr = ifAddress.getAddress();
+	                if (inetAddr instanceof Inet4Address) {
+	                    LocalData localData = new LocalData();
+	                    localData.localIF = netIf.getDisplayName();
+	                    localData.localHostName = inetAddr.getHostName();
+	                    localData.localIPv4 = inetAddr.getHostAddress();
+	                    short prefixLength = ifAddress.getNetworkPrefixLength();
+	                    localData.localSubnet = convertiPrefissoInSubnet(prefixLength) + " (/" + prefixLength + ")";
+
+	                    localDatas.add(localData);
+	                }
+	            }
+	        }
+	    } catch (SocketException e) {
+	        System.err.println("Errore nel recupero delle informazioni di rete: " + e.getMessage());
+	    }
+
+	    if (netPanel == null) {
+	        netPanel = new JPanel(new GridBagLayout());
+	    }
+	    netPanel.removeAll();
+
+	    Font fontLabel = new Font("Arial", Font.BOLD, 11);
+	    Font fontValue = new Font("Arial", Font.PLAIN, 11);
+	    Font fontMsg = new Font("Arial", Font.PLAIN, 10);
+
+	    // ==========================================
+	    // SEZIONE 1: TAB DELLE INTERFACCE DI RETE
+	    // ==========================================
+	    JTabbedPane jtb = new JTabbedPane();
+
+	    for (LocalData localData : localDatas) {
+	        JPanel ifPanel = new JPanel(new GridBagLayout());
+	        GridBagConstraints gbcIf = new GridBagConstraints();
+	        gbcIf.insets = new Insets(3, 5, 3, 5);
+	        gbcIf.anchor = GridBagConstraints.WEST;
+
+	        // --- Riga 0: Hostname & IP Locale ---
+	        gbcIf.gridx = 0; gbcIf.gridy = 0;
+	        JLabel lblHost = new JLabel("Hostname:");
+	        lblHost.setFont(fontLabel);
+	        ifPanel.add(lblHost, gbcIf);
+
+	        gbcIf.gridx = 1;
+	        JLabel txtHost = new JLabel(localData.localHostName);
+	        txtHost.setFont(fontValue);
+	        ifPanel.add(txtHost, gbcIf);
+
+	        gbcIf.gridx = 2;
+	        JLabel lblIp = new JLabel("IP Locale:");
+	        lblIp.setFont(fontLabel);
+	        ifPanel.add(lblIp, gbcIf);
+
+	        gbcIf.gridx = 3;
+	        JLabel txtIp = new JLabel(localData.localIPv4);
+	        txtIp.setFont(fontValue);
+	        ifPanel.add(txtIp, gbcIf);
+
+	        // --- Riga 1: Subnet Mask ---
+	        gbcIf.gridx = 0; gbcIf.gridy = 1;
+	        JLabel lblSubnet = new JLabel("Subnet Mask:");
+	        lblSubnet.setFont(fontLabel);
+	        ifPanel.add(lblSubnet, gbcIf);
+
+	        gbcIf.gridx = 1; gbcIf.gridwidth = 3;
+	        JLabel txtSubnet = new JLabel(localData.localSubnet);
+	        txtSubnet.setFont(fontValue);
+	        ifPanel.add(txtSubnet, gbcIf);
+
+	        jtb.addTab(localData.localIF, ifPanel);
+	    }
+
+	    // ==========================================
+	    // SEZIONE 2: PANNELLO QUERY SCANNER & AZIONI
+	    // ==========================================
+	    JPanel queryPanel = new JPanel(new GridBagLayout());
+	    queryPanel.setBorder(BorderFactory.createTitledBorder(
+	            BorderFactory.createEtchedBorder(), "Query Scansione IP", 
+	            TitledBorder.LEFT, TitledBorder.TOP, fontLabel));
+
+	    GridBagConstraints gbcQ = new GridBagConstraints();
+	    gbcQ.insets = new Insets(3, 4, 3, 4);
+	    gbcQ.fill = GridBagConstraints.HORIZONTAL;
+
+	    // --- Label & TextField IP Pattern ---
+	    gbcQ.gridx = 0; gbcQ.gridy = 0;
+	    gbcQ.weightx = 0.0;
+	    JLabel lblScanner = new JLabel("Target IP:");
+	    lblScanner.setFont(fontLabel);
+	    queryPanel.add(lblScanner, gbcQ);
+
+	    gbcQ.gridx = 1; 
+	    gbcQ.weightx = 1.0;
+	    txtIpPattern = new JTextField(15);
+	    txtIpPattern.setFont(new Font("Monospaced", Font.PLAIN, 12));
+	    txtIpPattern.setText(Options.lastIPQuery);
+	    queryPanel.add(txtIpPattern, gbcQ);
+
+	    // --- Status/Verifica Validazione ---
+	    gbcQ.gridx = 0; gbcQ.gridy = 1;
+	    gbcQ.gridwidth = 2;
+	    JLabel verifica = new JLabel(" ");
+	    verifica.setFont(fontMsg);
+	    queryPanel.add(verifica, gbcQ);
+
+	    // Configurazione filtri e listener per txtIpPattern
+	    eseguiParsing(verifica);
+	    ((AbstractDocument) txtIpPattern.getDocument()).setDocumentFilter(new IpPatternFilter(verifica));
+
+	    txtIpPattern.addKeyListener(new KeyAdapter() {
+	        @Override
+	        public void keyReleased(KeyEvent e) {
+	            super.keyReleased(e);
+	            if (e.getKeyChar() == '\n') {
+	                eseguiParsing(verifica);
+	                startCrawler();
+	            }
+	        }
+	    });
+
+	    // --- Pulsanti di Controllo ---
+	    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+	    startButton.setFont(fontMsg);
+	    stopButton.setFont(fontMsg);
+	    btnPanel.add(startButton);
+	    btnPanel.add(stopButton);
+
+	    gbcQ.gridx = 0; gbcQ.gridy = 2;
+	    gbcQ.gridwidth = 2;
+	    queryPanel.add(btnPanel, gbcQ);
+
+	    // ==========================================
+	    // SEZIONE 3: COMPOSIZIONE FINALE IN NETPANEL
+	    // ==========================================
+	    GridBagConstraints gbcMain = new GridBagConstraints();
+	    gbcMain.insets = new Insets(4, 4, 4, 4);
+	    gbcMain.fill = GridBagConstraints.BOTH;
+
+	    // Colonna Sinistra: TabbedPane con info di rete
+	    gbcMain.gridx = 0; gbcMain.gridy = 0;
+	    gbcMain.weightx = 0.6;
+	    gbcMain.weighty = 1.0;
+	    netPanel.add(jtb, gbcMain);
+
+	    // Colonna Destra: Pannello Query & Controlli
+	    gbcMain.gridx = 1; gbcMain.gridy = 0;
+	    gbcMain.weightx = 0.4;
+	    gbcMain.weighty = 1.0;
+	    netPanel.add(queryPanel, gbcMain);
+
+	    netPanel.revalidate();
+	    netPanel.repaint();
+
+	    return netPanel;
+	}
+	private JPanel getLocalNetworkPanelss() {
 		try {
 
 			// Ottiene l'elenco di tutte le interfacce di rete attive sul computer
