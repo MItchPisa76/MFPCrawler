@@ -71,20 +71,17 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
         git diff --quiet && git diff --staged --quiet || (git commit -m "docs: aggiunto link download per la versione $TAG_NAME [skip ci]" && git push)
-
-    - name: Carica l'installer nella Release di GitHub
+- name: Carica l'installer nella Release di GitHub
       if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v2
       with:
         files: target/dist/*.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-# Se avviato da release usa il suo tag, se avviato a mano usa 'v1.0.0-manual'
         tag_name: ${{ github.event.release.tag_name || 'v1.0.0-manual' }}
         name: ${{ github.event.release.name || 'Build Manuale - MFPCrawler' }}
         draft: false
         prerelease: false
-        
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Salva l'installer come Artifact (dalla pressione del pulsante manuale)
       if: ${{ github.event_name == 'workflow_dispatch' }}
       uses: actions/upload-artifact@v4
