@@ -107,13 +107,13 @@
 
 					<!-- Installazione per singolo utente (senza richiedere Admin/UAC).
 					     Risolve spesso i problemi di mancata visualizzazione nel Menu Start! -->
-					<winPerUserInstall>true</winPerUserInstall>
+					<winPerUserInstall>false</winPerUserInstall>
 
 					<!-- Permette di creare un collegamento nel Menu Start per disinstallare -->
 					<winShortcutPrompt>false</winShortcutPrompt>
 
 					<!-- Apre la finestra di console cmd all'avvio (utile per DEBUG) -->
-					<winConsole>true</winConsole>
+					<winConsole>false</winConsole>
 
 					<!-- ==================================================== -->
 					<!-- OPZIONALI: DYNAMIC ARGS E WIX TEMPLATES              -->
