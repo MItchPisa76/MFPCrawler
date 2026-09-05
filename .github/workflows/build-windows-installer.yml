@@ -16,7 +16,7 @@ on:
     types: [published]
 
 permissions:
-  contents: write
+  contents: write # Permette la creazione di Release e il push del README.md
 
 jobs:
   build-windows:
@@ -25,6 +25,9 @@ jobs:
     steps:
     - name: Controlla il codice sorgente
       uses: actions/checkout@v4
+      with:
+        # Mantiene il token per consentire il push del README al bot
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configura Java (JDK 21 x64)
       uses: actions/setup-java@v4
@@ -55,12 +58,15 @@ jobs:
       shell: bash
       run: |
         TAG_NAME="${{ github.event.release.tag_name }}"
-        EXE_FILE=$(basename $(ls target/dist/*.exe | head -n 1))
+        # Isolamento del solo file .exe finale
+        EXE_FILE=$(basename $(ls target/dist/*.exe | grep -v 'temp' | head -n 1))
         DOWNLOAD_URL="https://github.com/MitchPisa76/MFPCrawler/releases/download/$TAG_NAME/$EXE_FILE"
         NEW_ROW="| **$TAG_NAME** | [⚡ Scarica $EXE_FILE]($DOWNLOAD_URL) |"
         
+        # Aggiunta riga sotto il marcatore
         sed -i "/<!-- DOWNLOAD_TABLE_MARKER -->/a $NEW_ROW" README.md
         
+        # Configurazione Git ed push sicuro
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
@@ -79,4 +85,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: MFPCrawler-Windows-Installer
-        path: target/dist/
+        path: target/dist/*.exe
