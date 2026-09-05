@@ -40,8 +40,8 @@ jobs:
       if: ${{ github.event_name == 'release' || inputs.environment == 'local-network' }}
       env:
         SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
-        SOURCE_REPO_OWNER: owner-name
-        SOURCE_REPO_NAME: repo-name
+        SOURCE_REPO_OWNER: mitchpisa76
+        SOURCE_REPO_NAME: SNMPServer
         SECRET_NAME: LOCAL_SERVER_CERT
       shell: bash
       run: |
