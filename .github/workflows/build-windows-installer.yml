@@ -71,7 +71,7 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add README.md
         git diff --quiet && git diff --staged --quiet || (git commit -m "docs: aggiunto link download per la versione $TAG_NAME [skip ci]" && git push)
-- name: Carica l'installer nella Release di GitHub
+    - name: Carica l'installer nella Release di GitHub
       if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v2
       with:
