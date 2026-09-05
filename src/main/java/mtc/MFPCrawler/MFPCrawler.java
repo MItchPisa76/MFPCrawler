@@ -770,10 +770,10 @@ public class MFPCrawler extends JFrame {
 	        PrintStream logStream = new PrintStream(Files.newOutputStream(logFile), true);
 
 	        // Reindirizza stdout e stderr sullo stesso file di log
-	        System.setOut(logStream);
-	        System.setErr(logStream);
-	        LogViewerFrame viewer = new LogViewerFrame(logFile.toFile());
-            viewer.setVisible(true);
+	       // System.setOut(logStream);
+	       // System.setErr(logStream);
+	       // LogViewerFrame viewer = new LogViewerFrame(logFile.toFile());
+           // viewer.setVisible(true);
 	        System.out.println("=== Avvio applicazione MFPCrawler ===");
 	    } catch (Exception e) {
 	        e.printStackTrace();
