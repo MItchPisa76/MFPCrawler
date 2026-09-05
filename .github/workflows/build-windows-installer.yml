@@ -1,6 +1,19 @@
 name: Build Windows 64-bit Installer
 
 on:
+  # Allows manual execution by pressing a button in GitHub
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'local-network'
+        type: choice
+        options:
+        - local-network
+        - production
+
+  # Automatically triggers when a GitHub Release is published
   release:
     types: [published]
 
@@ -23,12 +36,34 @@ jobs:
         architecture: x64
         cache: 'maven'
 
+    # Conditionally inject local certificate if triggered manually with 'local-network' or on release
+    - name: Importa certificato SSL nel cacerts della JDK (Local Network)
+      if: ${{ github.event_name == 'release' || inputs.environment == 'local-network' }}
+      shell: bash
+      run: |
+        if [ -n "${{ secrets.LOCAL_SERVER_CERT }}" ]; then
+          mkdir -p src/main/resources/certs
+          echo "${{ secrets.LOCAL_SERVER_CERT }}" > src/main/resources/certs/server.crt
+          "$JAVA_HOME/bin/keytool" -importcert -alias resolve-server \
+            -file "src/main/resources/certs/server.crt" \
+            -keystore "$JAVA_HOME/lib/security/cacerts" \
+            -storepass changeit -noprompt
+        fi
+
     - name: Costruisci il progetto e l'installer con Maven
       run: mvn clean verify
 
     - name: Carica l'installer generato nella Release di GitHub
+      if: ${{ github.event_name == 'release' }}
       uses: softprops/action-gh-release@v2
       with:
         files: target/dist/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Salva l'installer come Artifact (dalla pressione del pulsante manuale)
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: Windows-Installer-EXE
+        path: target/dist/*.exe
