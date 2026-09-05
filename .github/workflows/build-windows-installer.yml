@@ -35,85 +35,21 @@ jobs:
         distribution: 'temurin'
         architecture: x64
         cache: 'maven'
-
-    - name: Recupera il certificato dal repository esterno
-      if: ${{ github.event_name == 'release' || inputs.environment == 'local-network' }}
-      env:
-        SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
-        SOURCE_REPO_OWNER: MItchPisa76
-        SOURCE_REPO_NAME: SNMPServer
-        SECRET_NAME: PAT_SECRET_SYNC
-      shell: bash
-      run: |
-        # Recupera il secret dal repository esterno usando l'API di GitHub
-        CERTIFICATE=$(curl -s -H "Authorization: token $SOURCE_REPO_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/$SOURCE_REPO_OWNER/$SOURCE_REPO_NAME/actions/secrets/$SECRET_NAME" \
-          | jq -r '.value // empty')
-        
-        if [ -n "$CERTIFICATE" ]; then
-          echo "Certificato recuperato dal repository $SOURCE_REPO_OWNER/$SOURCE_REPO_NAME"
-          echo "CERT_VALUE=$CERTIFICATE" >> $GITHUB_ENV
-        else
-          echo "ERRORE: Secret $SECRET_NAME non trovato in $SOURCE_REPO_OWNER/$SOURCE_REPO_NAME"
-          exit 1
-        fi
-
-    - name: Importa certificato SSL nel JDK e nel cacerts della build
+    - name: Importa certificato SSL nel cacerts della JDK
       if: ${{ github.event_name == 'release' || inputs.environment == 'local-network' }}
       shell: bash
       run: |
-        if [ -n "${{ env.CERT_VALUE }}" ]; then
-          echo "Certificato trovato. Importazione in corso..."
+        if [ -n "${{ secrets.LOCAL_SERVER_CERT }}" ]; then
+          echo "Certificato trovato nei Secrets. Importazione in corso..."
           
           # Crea la cartella di destinazione per la build
           mkdir -p src/main/resources/certs
-          echo "${{ env.CERT_VALUE }}" > src/main/resources/certs/server.crt
+          echo "${{ secrets.LOCAL_SERVER_CERT }}" > src/main/resources/cert.pem
           
-          # Importa il certificato nel cacerts della JDK corrente (usato da Maven e jpackage)
-          "$JAVA_HOME/bin/keytool" -importcert -alias resolve-server \
-            -file "src/main/resources/certs/server.crt" \
-            -keystore "$JAVA_HOME/lib/security/cacerts" \
-            -storepass changeit -noprompt
-            
-          echo "Certificato importato nel JDK: $JAVA_HOME"
-          echo "JAVA_CERT_IMPORTED=true" >> $GITHUB_ENV
-        else
-          echo "ATTENZIONE: Certificato non disponibile!"
-          exit 1
-        fi
-
     - name: Costruisci il progetto e l'installer con Maven
       env:
         _JAVA_OPTIONS: "-Dcom.sun.jndi.ldap.connect.pool=false"
       run: mvn clean verify
-
-    - name: Importa certificato nel cacerts del runtime bundled nell'installer
-      if: ${{ (github.event_name == 'release' || inputs.environment == 'local-network') && env.JAVA_CERT_IMPORTED == 'true' }}
-      shell: bash
-      run: |
-        # Cerca il runtime Java bundled creato da jpackage
-        BUNDLED_JAVA=$(find target/dist -name "runtime" -type d | head -n 1)
-        
-        if [ -n "$BUNDLED_JAVA" ] && [ -d "$BUNDLED_JAVA" ]; then
-          BUNDLED_CACERTS="$BUNDLED_JAVA/lib/security/cacerts"
-          
-          if [ -f "$BUNDLED_CACERTS" ]; then
-            echo "Certificato trovato nel runtime bundled: $BUNDLED_JAVA"
-            
-            # Importa il certificato nel cacerts del runtime bundled
-            "$BUNDLED_JAVA/bin/keytool" -importcert -alias resolve-server \
-              -file "src/main/resources/certs/server.crt" \
-              -keystore "$BUNDLED_CACERTS" \
-              -storepass changeit -noprompt
-              
-            echo "Certificato importato nel runtime bundled con successo."
-          else
-            echo "AVVISO: File cacerts non trovato in $BUNDLED_JAVA/lib/security/"
-          fi
-        else
-          echo "AVVISO: Runtime Java bundled non trovato. Sarà creato durante la build."
-        fi
 
     - name: Aggiungi nuova versione al README.md
       if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
