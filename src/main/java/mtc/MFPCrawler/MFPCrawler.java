@@ -22,6 +22,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Inet4Address;
@@ -771,7 +772,8 @@ public class MFPCrawler extends JFrame {
 	        // Reindirizza stdout e stderr sullo stesso file di log
 	        System.setOut(logStream);
 	        System.setErr(logStream);
-
+	        LogViewerFrame viewer = new LogViewerFrame(logFile.toFile());
+            viewer.setVisible(true);
 	        System.out.println("=== Avvio applicazione MFPCrawler ===");
 	    } catch (Exception e) {
 	        e.printStackTrace();
@@ -784,6 +786,7 @@ public class MFPCrawler extends JFrame {
 			Resolver.startCrawler();
 
 			crawlerWindow.startCrawler();
+			
 		});
 	}
 }
